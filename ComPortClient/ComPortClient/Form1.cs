@@ -1,0 +1,129 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Threading;
+using System.IO.Ports;
+
+namespace ComPortClient
+{
+    public partial class Form1 : Form
+    {
+        private ComPort cp;
+        
+
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+             cp = new ComPort("COM3");
+
+            this.DataRecived += new EventHandler<DataRecivedEventArgs>(Form1_DataRecived);
+
+        }
+
+        void Form1_DataRecived(object sender, Form1.DataRecivedEventArgs e)
+        {
+            this.BeginInvoke(new label_set_delegate(label_set), e.Message);
+
+        }
+
+
+        public delegate  void label_set_delegate (string message);
+
+
+        public  void label_set(string message)
+        {
+           // label1.Text = message;
+        }
+
+        public event EventHandler<DataRecivedEventArgs> DataRecived;
+
+
+
+        
+
+        private void OnDataRecived(string message)
+        {
+            if (DataRecived!=null)
+            {
+                DataRecived(this, new DataRecivedEventArgs(message));
+            }
+
+
+
+        }
+
+        public class DataRecivedEventArgs: EventArgs
+        {
+            public DataRecivedEventArgs(string message)
+            {
+                Message = message;
+            }
+
+
+            public string Message { get; private set; }
+
+        }
+
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+
+                cp.SendMessage(textBox1.Text);
+                richTextBox1.AppendText(String.Format("<{0}>: {1}", cp.Name, textBox1.Text + "\n"));
+            
+                textBox1.Clear();
+
+            
+        }
+        private void serialPort1_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (cp.NewMessage)
+            {
+                richTextBox1.AppendText(cp.ReciveMessage()+"\n");
+            }
+
+
+            if (cp.flag)
+            {
+                cp.flag = false;
+                cp.ReciveFileDialog();
+                
+            }
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            cp.Name = textBox2.Text;
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+  
+                richTextBox1.AppendText(String.Format("<{0}>: {1}", cp.Name, "Sending File" + "\n"));
+                cp.SendFileDialog();
+            
+        }
+
+
+    }
+}
