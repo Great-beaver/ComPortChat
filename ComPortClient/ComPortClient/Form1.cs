@@ -78,8 +78,8 @@ namespace ComPortClient
         private void button1_Click(object sender, EventArgs e)
         {
 
-                cp.SendMessage(textBox1.Text);
-                richTextBox1.AppendText(String.Format("<{0}>: {1}", cp.Name, textBox1.Text + "\n"));
+            cp.SendMessage(textBox1.Text);
+            richTextBox1.AppendText(String.Format("<{0}>: {1}", cp.Name, textBox1.Text + "\n"));
             
                 textBox1.Clear();
 
