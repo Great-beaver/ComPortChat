@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.IO.Ports;
+using System.Collections;
 
 using System.Windows.Forms;
 
@@ -13,7 +14,7 @@ namespace ComPortClient
     class ComPort
     {
         private bool _fileToRecive = false;
-        public bool flag = false;
+        public bool ReciveFileflag = false;
         StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
         public bool NewMessage { get; private set; }
         public string Name= "User";
@@ -21,8 +22,8 @@ namespace ComPortClient
         private byte[] _bytes;
         private SerialPort sp;
         private Thread readThread;
-        public string Message;
-
+        public string Message="";
+        public Queue MessagesQueue;
 
         public ComPort (string ComPortNumber)
         {
@@ -39,9 +40,12 @@ namespace ComPortClient
 
             sp.WriteBufferSize=20000;
             sp.ReadBufferSize = 20000;
-           // sp.ReadBufferSize = 19737;
+
+            MessagesQueue = new Queue(100);
 
             NewMessage = false;
+
+            
 
             readThread = new Thread(Read);
             sp.Open();
@@ -66,32 +70,37 @@ namespace ComPortClient
                     if (_fileToRecive)
                     {
                         ReciveFile();
-                        //ReciveFileDialog();
                         _fileToRecive = false;
-                        flag = true;
+                        ReciveFileflag = true;
 
                     }
                     else
                        {
-                           string message = sp.ReadLine();
 
-                           if (Message != message)
-                           {
-                               NewMessage = true;
-                               Message = message;
+                           MessagesQueue.Enqueue(sp.ReadLine());
 
-                               if (stringComparer.Equals("#SendFile#", message))
-                               {
-                                   Message = "Start reciving file";
-                                   _fileToRecive = true;
-                               }
-                           }
+                   //       string message = sp.ReadLine();
+                   //
+                   //       if (Message != message)
+                   //       {
+                   //           NewMessage = true;
+                   //           Message = message;
+                   //
+                   //           if (stringComparer.Equals("#SendFile#", message))
+                   //           {
+                   //               Message = "Start reciving file";
+                   //               _fileToRecive = true;
+                   //           }
+                   //       }
+
+
                        }
 
                 }
                 catch (TimeoutException) { }
             }
         }
+
 
 
         public string ReciveMessage ()
@@ -104,6 +113,8 @@ namespace ComPortClient
         {
             sp.WriteLine(String.Format("<{0}>: {1}", Name, message));
         }
+
+
 
         public void SendString (string s)
         {

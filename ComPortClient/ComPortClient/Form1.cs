@@ -77,9 +77,11 @@ namespace ComPortClient
 
         private void button1_Click(object sender, EventArgs e)
         {
-
-            cp.SendMessage(textBox1.Text);
-            richTextBox1.AppendText(String.Format("<{0}>: {1}", cp.Name, textBox1.Text + "\n"));
+                             
+            //cp.SendMessage(textBox1.Text);
+            cp.SendString(textBox1.Text);
+            //richTextBox1.AppendText(String.Format("<{0}>: {1}", cp.Name, textBox1.Text + "\n"));
+            richTextBox1.AppendText(textBox1.Text + "\n");
             
                 textBox1.Clear();
 
@@ -92,15 +94,21 @@ namespace ComPortClient
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            if (cp.NewMessage)
+          // if (cp.NewMessage)
+          // {
+          //     richTextBox1.AppendText(cp.ReciveMessage()+"\n");
+          // }
+
+            while (cp.MessagesQueue.Count > 0)
             {
-                richTextBox1.AppendText(cp.ReciveMessage()+"\n");
+                richTextBox1.AppendText(cp.MessagesQueue.Dequeue() + "\n"); 
             }
 
 
-            if (cp.flag)
+
+            if (cp.ReciveFileflag)
             {
-                cp.flag = false;
+                cp.ReciveFileflag = false;
                 cp.ReciveFileDialog();
                 
             }
@@ -113,7 +121,10 @@ namespace ComPortClient
 
         private void button2_Click(object sender, EventArgs e)
         {
-            cp.Name = textBox2.Text;
+            //cp.Name = textBox2.Text;
+
+            MessageBox.Show(Convert.ToString(textBox2.Text.GetHashCode()));
+            
         }
 
         private void button3_Click(object sender, EventArgs e)
