@@ -104,44 +104,53 @@ namespace ComPortClient
             {
                 string s = Convert.ToString(cp.MessagesQueue.Dequeue());
 
-                string[] message;
+              //  string[] message;
 
-                message = s.Split('|');
+                string[] message = s.Split('\0');
 
 
-                switch (message[0])
-                {
-                    case "TextMessage":
-                        {
-                            if (message[1].GetHashCode() == Convert.ToInt32(message[2]))
+                // string message = s.Substring(s.IndexOf('|'), s.Length);
+
+
+                    //  string MessageType = s.Substring(0, s.IndexOf('|'));
+
+
+                    switch (message[0])
+                    {
+                        case "TextMessage":
                             {
-                                cp.SendSystemMessage("Message delivered");
-                                richTextBox1.AppendText(message[1] + "\n");
-                            }
+
+
+
+                                if (message[1].GetHashCode() == Convert.ToInt32(message[2]))
+                                {
+                                    cp.SendSystemMessage("Message delivered");
+                                    richTextBox1.AppendText(message[1] + "\n");
+                                }
                                 else
                                 {
                                     richTextBox1.AppendText(s + "\n");
                                     cp.SendSystemMessage("Message not delivered");
                                 }
-                        }
-                        break;
-
-
-                    case "SystemMessage":
-                        {
-                            if (message[1].GetHashCode() == Convert.ToInt32(message[2]))
-                            {
-                                richTextBox1.AppendText(message[1] + "\n");
                             }
-                        }
-                        break;
+                            break;
+
+
+                        case "SystemMessage":
+                            {
+                                if (message[1].GetHashCode() == Convert.ToInt32(message[2]))
+                                {
+                                    richTextBox1.AppendText(message[1] + "\n");
+                                }
+                            }
+                            break;
 
 
 
 
 
 
-                }
+                    }
 
 
 
@@ -179,14 +188,17 @@ namespace ComPortClient
 
             //MessageBox.Show(Convert.ToString(textBox2.Text.GetHashCode()));
 
+            string MessageType = textBox2.Text.Substring(0, textBox2.Text.IndexOf('|'));
             
+            MessageBox.Show(MessageType);
+            /*
 
             SaveFileDialog sd = new SaveFileDialog();
 
             if (sd.ShowDialog() == DialogResult.OK)
             {
                 cp.ByteArrayToFile(sd.FileName, StringCompressor.Zip(textBox2.Text));
-            }
+            }*/
 
         }
 
