@@ -111,9 +111,17 @@ namespace ComPortClient
 
         public void SendMessage (string message)
         {
-            sp.WriteLine(String.Format("<{0}>: {1}", Name, message));
+           // sp.WriteLine(String.Format("<{0}>: {1}", Name, message));
+
+            sp.WriteLine("TextMessage|"+message+"|"+Convert.ToString(message.GetHashCode()));
         }
 
+        public void SendSystemMessage(string message)
+        {
+            // sp.WriteLine(String.Format("<{0}>: {1}", Name, message));
+
+            sp.WriteLine("SystemMessage|" + message + "|" + Convert.ToString(message.GetHashCode()));
+        }
 
 
         public void SendString (string s)

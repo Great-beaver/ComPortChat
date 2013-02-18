@@ -24,7 +24,7 @@ namespace ComPortClient
 
         private void Form1_Load(object sender, EventArgs e)
         {
-             cp = new ComPort("COM2");
+             cp = new ComPort("COM3");
 
             this.DataRecived += new EventHandler<DataRecivedEventArgs>(Form1_DataRecived);
 
@@ -79,8 +79,8 @@ namespace ComPortClient
         {
                              
             //cp.SendMessage(textBox1.Text);
-
-            cp.SendString(StringCompressor.CompressString(textBox1.Text));
+            //cp.SendString(StringCompressor.CompressString(textBox1.Text));
+            cp.SendMessage(textBox1.Text);
             //richTextBox1.AppendText(String.Format("<{0}>: {1}", cp.Name, textBox1.Text + "\n"));
             richTextBox1.AppendText(textBox1.Text + "\n");
             
@@ -102,9 +102,57 @@ namespace ComPortClient
 
             while (cp.MessagesQueue.Count > 0)
             {
-              //  string s = Convert.ToString(cp.MessagesQueue.Dequeue());
+                string s = Convert.ToString(cp.MessagesQueue.Dequeue());
 
-                richTextBox1.AppendText(cp.MessagesQueue.Dequeue() + "\n"); 
+                string[] message;
+
+                message = s.Split('|');
+
+
+                switch (message[0])
+                {
+                    case "TextMessage":
+                        {
+                            if (message[1].GetHashCode() == Convert.ToInt32(message[2]))
+                            {
+                                cp.SendSystemMessage("Message delivered");
+                                richTextBox1.AppendText(message[1] + "\n");
+                            }
+                                else
+                                {
+                                    richTextBox1.AppendText(s + "\n");
+                                    cp.SendSystemMessage("Message not delivered");
+                                }
+                        }
+                        break;
+
+
+                    case "SystemMessage":
+                        {
+                            if (message[1].GetHashCode() == Convert.ToInt32(message[2]))
+                            {
+                                richTextBox1.AppendText(message[1] + "\n");
+                            }
+                        }
+                        break;
+
+
+
+
+
+
+                }
+
+
+
+                //  for (int i = 0; i < message.Length; i++)
+               //  {
+               //      MessageBox.Show(message[i]); 
+               //  }
+
+
+                
+               // richTextBox1.AppendText(cp.MessagesQueue.Dequeue() + "\n"); 
 
                // richTextBox1.AppendText(StringCompressor.DecompressString(s) + "\n"); 
 
@@ -129,8 +177,17 @@ namespace ComPortClient
         {
             //cp.Name = textBox2.Text;
 
-            MessageBox.Show(Convert.ToString(textBox2.Text.GetHashCode()));
+            //MessageBox.Show(Convert.ToString(textBox2.Text.GetHashCode()));
+
             
+
+            SaveFileDialog sd = new SaveFileDialog();
+
+            if (sd.ShowDialog() == DialogResult.OK)
+            {
+                cp.ByteArrayToFile(sd.FileName, StringCompressor.Zip(textBox2.Text));
+            }
+
         }
 
         private void button3_Click(object sender, EventArgs e)
