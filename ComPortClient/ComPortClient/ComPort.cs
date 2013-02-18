@@ -14,7 +14,7 @@ namespace ComPortClient
     class ComPort
     {
         private bool _fileToRecive = false;
-        public bool ReciveFileflag = false;
+        public bool FileReciveComplete = false;
         StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
         public bool NewMessage { get; private set; }
         public string Name= "User";
@@ -71,7 +71,7 @@ namespace ComPortClient
                     {
                         ReciveFile();
                         _fileToRecive = false;
-                        ReciveFileflag = true;
+                        FileReciveComplete = true;
 
                     }
                     else

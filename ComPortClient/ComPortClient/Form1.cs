@@ -112,9 +112,9 @@ namespace ComPortClient
 
 
 
-            if (cp.ReciveFileflag)
+            if (cp.FileReciveComplete)
             {
-                cp.ReciveFileflag = false;
+                cp.FileReciveComplete = false;
                 cp.ReciveFileDialog();
                 
             }
