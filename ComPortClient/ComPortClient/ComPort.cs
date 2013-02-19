@@ -15,14 +15,14 @@ namespace ComPortClient
     {
         public int ClientId = 0;
         public bool MultiLineMessageStarted = false;
-        private bool _fileToRecive = false;
+        public bool _fileToRecive = false;
         public bool FileReciveComplete = false;
         StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
         public bool NewMessage { get; private set; }
         public string Name= "User";
         private bool _continue = false;
-        private byte[] _bytes;
-        private SerialPort sp;
+        public byte[] _bytes;
+        public SerialPort sp;
         private Thread readThread;
         public string Message="";
         public Queue MessagesQueue;
@@ -49,8 +49,6 @@ namespace ComPortClient
             MessagesQueue = new Queue(100);
 
             NewMessage = false;
-
-            
 
             readThread = new Thread(Read);
             sp.Open();
@@ -80,25 +78,16 @@ namespace ComPortClient
 
                     }
                     else
+                    {
+                        string[] message = ParseMessage(sp.ReadLine());
+
+                       if (message != null)
                        {
-
-                           MessagesQueue.Enqueue(sp.ReadLine());
-
-                   //       string message = sp.ReadLine();
-                   //
-                   //       if (Message != message)
-                   //       {
-                   //           NewMessage = true;
-                   //           Message = message;
-                   //
-                   //           if (stringComparer.Equals("#SendFile#", message))
-                   //           {
-                   //               Message = "Start reciving file";
-                   //               _fileToRecive = true;
-                   //           }
-                   //       }
-
-
+                           MessagesQueue.Enqueue(message);
+                          
+                       }
+                           
+                           
                        }
 
                 }
@@ -108,10 +97,117 @@ namespace ComPortClient
 
 
 
-        public string ReciveMessage ()
+        public string[] ParseMessage(string s)
         {
-            NewMessage = false;
-            return Message;
+           // if (MessagesQueue.Count <= 0) return null;
+
+           // string s = Convert.ToString(MessagesQueue.Dequeue());
+
+            string[] outputmessage;
+
+            string[] message = s.Split('\0');
+
+            switch (message[0])
+            {
+                case "TextMessage":
+                    {
+
+                        if ((message[3]).GetHashCode() == Convert.ToInt32(message[4]))
+                        {
+                            SendMessage("SystemMessage", Convert.ToInt32(message[2]), "Message delivered");
+                            outputmessage = new string[1];
+                            outputmessage[0] = message[3] + "\n";
+                            return outputmessage;
+                             
+                        }
+                    }
+                    break;
+
+
+                case "SystemMessage":
+                    {
+                        if ((message[3]).GetHashCode() == Convert.ToInt32(message[4]))
+                        {
+                            outputmessage = new string[1];
+                            outputmessage[0] = message[3] + "\n";
+                            return outputmessage;
+                        }
+                    }
+                    break;
+
+
+                case "MultiLineMessageStart":
+                    {
+                        if (ClientId == Convert.ToInt32(message[1]))
+                        {
+                            countOfRecivedLines = 0;
+                            MultiLineMessageBuffer = new string[Convert.ToInt32(message[3])];
+                            MultiLineMessageStarted = true;
+                            //outputmessage = new string[1];
+                           // outputmessage[0] = ("Мультистрочное сообщение от ID: " + message[1] + "\n");
+                           // return outputmessage;
+                        }
+                    }
+                    break;
+
+                case "Line":
+                    {
+                        if (((message[3]).GetHashCode() == Convert.ToInt32(message[4])) && MultiLineMessageStarted)
+                        {
+                            MultiLineMessageBuffer[countOfRecivedLines] = message[3];
+                            countOfRecivedLines++;
+                        }
+                    }
+                    break;
+
+                case "MultiLineMessageFinish":
+                    {
+                        if (ClientId == Convert.ToInt32(message[1]))
+                        {
+                            if (countOfRecivedLines == MultiLineMessageBuffer.Length)
+                            {
+                                SendMessage("SystemMessage", Convert.ToInt32(message[2]), "Message delivered");   
+                            }
+
+
+                            MultiLineMessageStarted = false;
+
+                            return MultiLineMessageBuffer;
+
+                        }
+                    }
+                    break;
+
+
+                case "FileTransferRequest":
+                    {
+                        if (Convert.ToInt16(message[1]) == ClientId)
+                        {
+                            _bytes = new byte[Convert.ToInt32(message[4])];
+                            _fileToRecive = true;
+
+                            outputmessage = new string[1];
+                            outputmessage[0] = ("Reciving file" + "\n");
+                            return outputmessage;
+                        }
+                    }
+                    break;
+
+            }
+
+            return null;
+
+            //  for (int i = 0; i < message.Length; i++)
+            //  {
+            //      MessageBox.Show(message[i]); 
+            //  }
+
+
+
+            // richTextBox1.AppendText(cp.MessagesQueue.Dequeue() + "\n"); 
+
+            // richTextBox1.AppendText(StringCompressor.DecompressString(s) + "\n"); 
+
         }
 
         public void SendMessage (string type, int toId, string message)     
@@ -127,9 +223,10 @@ namespace ComPortClient
             sp.WriteLine(type + '\0' + toId + '\0' + ClientId + '\0' + message + '\0' + Convert.ToString(message.GetHashCode()));
         }
 
-        public void SendFileTransferRequest(int toId, string fileName, byte[] file)
+        public void SendFileTransferRequest(int toId, string filePath, byte[] file)
         {
-            sp.WriteLine("FileTransferRequest" + '\0' + toId + '\0' + ClientId + '\0' + fileName + '\0' + file.Length + '\0' + file.GetHashCode());
+            FileInfo fileInfo = new FileInfo(filePath);
+            sp.WriteLine("FileTransferRequest" + '\0' + toId + '\0' + ClientId + '\0' + fileInfo.Name + '\0' + file.Length + '\0' + file.GetHashCode());
         }
 
 
@@ -173,8 +270,7 @@ namespace ComPortClient
 
         public void SendFile(string filename)
         {
-            _bytes = File.ReadAllBytes(filename);
-            SendString("#SendFile#");
+            
            // MessageBox.Show(_bytes.Length.ToString());
             sp.Write(_bytes,0,_bytes.Length); 
         }
@@ -185,7 +281,8 @@ namespace ComPortClient
 
             if (od.ShowDialog() == DialogResult.OK)
             {
-                
+                _bytes = File.ReadAllBytes(od.FileName);
+                SendFileTransferRequest(0, od.FileName, _bytes);
                 SendFile(od.FileName);
             }
  

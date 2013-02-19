@@ -99,104 +99,13 @@ namespace ComPortClient
             // Обработчик принятых сообещний, вынести в класс
 
             while (cp.MessagesQueue.Count > 0)
+
             {
-                string s = Convert.ToString(cp.MessagesQueue.Dequeue());
+                // cp.MessagesQueue.Dequeue();
 
-                string[] message = s.Split('\0');
-
-                    switch (message[0])
-                    {
-                        case "TextMessage":
-                            {
-
-
-                                if ((message[3]).GetHashCode() == Convert.ToInt32(message[4]))
-                                {
-                                    cp.SendMessage("SystemMessage", Convert.ToInt32(message[2]), "Message delivered");
-                                    //cp.SendSystemMessage("Message delivered",0);
-                                    richTextBox1.AppendText(message[3] + "\n");
-                                }
-                                else
-                                {
-                                    richTextBox1.AppendText(s + "\n");
-                                    cp.SendMessage("SystemMessage", Convert.ToInt32(message[2]), "Message not delivered");
-                                    //cp.SendSystemMessage("Message not delivered",0);
-                                }
-                            }
-                            break;
-
-
-                        case "SystemMessage":
-                            {
-                                if ((message[3]).GetHashCode() == Convert.ToInt32(message[4]))
-                                {
-                                    richTextBox1.AppendText(message[3] + "\n");
-                                }
-                            }
-                            break;
-
-
-                        case "MultiLineMessageStart":
-                            {
-                                if (cp.ClientId == Convert.ToInt32(message[1]))
-                                {
-                                    cp.countOfRecivedLines = 0;
-                                    cp.MultiLineMessageBuffer = new string[Convert.ToInt32(message[3])];
-                                    cp.MultiLineMessageStarted = true;
-                                    richTextBox1.AppendText("Мультистрочное сообщение от ID: " + message[1] + "\n");
-                                }
-                            }
-                            break;
-
-                        case "Line":
-                            {
-                                if (((message[3]).GetHashCode() == Convert.ToInt32(message[4])) && cp.MultiLineMessageStarted)
-                                {
-                                    cp.MultiLineMessageBuffer[cp.countOfRecivedLines] = message[3];
-                                    cp.countOfRecivedLines++;
-                                   // richTextBox1.AppendText(message[3] + "\n");
-                                }
-                            }
-                            break;
-
-                        case "MultiLineMessageFinish":
-                            {
-                                if (cp.ClientId == Convert.ToInt32(message[1]))
-                                {
-                                    if (cp.countOfRecivedLines==cp.MultiLineMessageBuffer.Length)
-                                    {
-                                        for (int i=0;i<cp.countOfRecivedLines;i++)
-                                        {
-                                            richTextBox1.AppendText(cp.MultiLineMessageBuffer[i] + "\n");
-                                        }
-                                            cp.SendMessage("SystemMessage", Convert.ToInt32(message[2]), "Message delivered");
-                                    }
-                                    else
-                                        cp.SendMessage("SystemMessage", Convert.ToInt32(message[2]), "Message NOT delivered");
-                                    cp.MultiLineMessageStarted = false;
-                                }
-                            }
-                            break;
-
-
-
-                    }
-
-
-
-                //  for (int i = 0; i < message.Length; i++)
-               //  {
-               //      MessageBox.Show(message[i]); 
-               //  }
-
-
-                
-               // richTextBox1.AppendText(cp.MessagesQueue.Dequeue() + "\n"); 
-
-               // richTextBox1.AppendText(StringCompressor.DecompressString(s) + "\n"); 
-
+               richTextBox1.AppendText(Convert.ToString(cp.MessagesQueue.Dequeue()));
+ 
             }
-
 
 
             if (cp.FileReciveComplete)
@@ -229,7 +138,6 @@ namespace ComPortClient
             {
                 cp.ByteArrayToFile(sd.FileName, StringCompressor.Zip(textBox2.Text));
             }*/
-
 
             cp.SendMultiLineMessage(0,richTextBox2.Lines);
 
