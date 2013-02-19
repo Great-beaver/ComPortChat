@@ -13,6 +13,8 @@ namespace ComPortClient
 {
     class ComPort
     {
+        public int ClientId = 0;
+        public bool MultiLineMessageStarted = false;
         private bool _fileToRecive = false;
         public bool FileReciveComplete = false;
         StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
@@ -24,6 +26,9 @@ namespace ComPortClient
         private Thread readThread;
         public string Message="";
         public Queue MessagesQueue;
+        public string[] MultiLineMessageBuffer;
+        public int countOfRecivedLines;
+
 
         public ComPort (string ComPortNumber)
         {
@@ -53,12 +58,12 @@ namespace ComPortClient
             readThread.Start();
         }
 
-         ~ComPort()
-        {
-            _continue = false;
-            readThread.Join();
-            sp.Close();
-        }
+        ~ComPort()
+       {
+           _continue = false;
+           readThread.Join();
+           sp.Close();
+       }
 
         private void Read()
         {
@@ -109,19 +114,50 @@ namespace ComPortClient
             return Message;
         }
 
-        public void SendMessage (string message)     
+        public void SendMessage (string type, int toId, string message)     
         {
             // sp.WriteLine(String.Format("<{0}>: {1}", Name, message));   
 
-            sp.WriteLine("TextMessage" + '\0' + message + '\0' + Convert.ToString(message.GetHashCode()));
+            // Формат тестового сообщения [Тип сообщения] [ID получателя] [ID отправителя] [тело сообщения] [Контрольнная сумма]
+
+           // string s = ("TextMessage" + '\0' + toId + '\0' + ClientId + '\0' + message);
+
+           // MessageBox.Show(s + '\0' + Convert.ToString(s.GetHashCode()));
+
+            sp.WriteLine(type + '\0' + toId + '\0' + ClientId + '\0' + message + '\0' + Convert.ToString(message.GetHashCode()));
         }
 
-        public void SendSystemMessage(string message)
+
+
+        public void SendMultiLineMessage (int toId, string[] message)
         {
-            // sp.WriteLine(String.Format("<{0}>: {1}", Name, message));
+            // Заголовок сообщения из нескольких строк [Тип сообщения] [ID получателя] [ID отправителя] [количество строк]
+            sp.WriteLine("MultiLineMessageStart" + '\0' + toId + '\0' + ClientId + '\0' + message.Length);
 
-            sp.WriteLine("SystemMessage"+'\0' + message + '\0' + Convert.ToString(message.GetHashCode()));
+
+
+            for (int i = 0; i < message.Length; i++)
+            {
+                sp.WriteLine("Line" + '\0' + toId + '\0' + ClientId + '\0' + message[i] + '\0' + Convert.ToString(message[i].GetHashCode()));
+            }
+
+            sp.WriteLine("MultiLineMessageFinish" + '\0' + toId + '\0' + ClientId);
+
+
         }
+
+
+        //    public void SendSystemMessage(string message, int toId)
+ //    {
+ //        // sp.WriteLine(String.Format("<{0}>: {1}", Name, message));
+ //
+ //        // Формат системного сообщения [Тип сообщения] [ID получателя] [ID отправителя] [тело сообщения] [Контрольнная сумма]
+ //
+ //       // string s = "SystemMessage" + '\0' + toId + '\0' + ClientId + '\0' + message;
+ //
+ //        sp.WriteLine("SystemMessage" + '\0' + toId + '\0' + ClientId + '\0' + message + '\0' + Convert.ToString(message.GetHashCode()));
+ //        
+ //    }
 
 
         public void SendString (string s)
