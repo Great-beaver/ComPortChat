@@ -127,6 +127,11 @@ namespace ComPortClient
             sp.WriteLine(type + '\0' + toId + '\0' + ClientId + '\0' + message + '\0' + Convert.ToString(message.GetHashCode()));
         }
 
+        public void SendFileTransferRequest(int toId, string fileName, byte[] file)
+        {
+            sp.WriteLine("FileTransferRequest" + '\0' + toId + '\0' + ClientId + '\0' + fileName + '\0' + file.Length + '\0' + file.GetHashCode());
+        }
+
 
 
         public void SendMultiLineMessage (int toId, string[] message)
