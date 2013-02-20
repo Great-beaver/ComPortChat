@@ -116,7 +116,7 @@ namespace ComPortClient
                         {
                             SendMessage("SystemMessage", Convert.ToInt32(message[2]), "Message delivered");
                             outputmessage = new string[1];
-                            outputmessage[0] = message[3] + "\n";
+                            outputmessage[0] = message[3]; // +"\n";
                             return outputmessage;
                              
                         }

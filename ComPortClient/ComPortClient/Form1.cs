@@ -9,6 +9,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Threading;
 using System.IO.Ports;
+using System.Collections;
 
 namespace ComPortClient
 {
@@ -24,7 +25,7 @@ namespace ComPortClient
 
         private void Form1_Load(object sender, EventArgs e)
         {
-             cp = new ComPort("COM3");
+             cp = new ComPort("COM2");
 
             this.DataRecived += new EventHandler<DataRecivedEventArgs>(Form1_DataRecived);
 
@@ -102,8 +103,21 @@ namespace ComPortClient
 
             {
                 // cp.MessagesQueue.Dequeue();
+                //string[] message;
+                object obj;
+                obj = cp.MessagesQueue.Dequeue();
+                string[] arr = ((IEnumerable)obj).Cast<object>()
+                                 .Select(x => x.ToString())
+                                 .ToArray();
+                for (int i = 0;i<arr.Length; i++)
+                {
+                    richTextBox1.AppendText(arr[i]+'\n');
+                }
 
-               richTextBox1.AppendText(Convert.ToString(cp.MessagesQueue.Dequeue()));
+                
+
+
+            //   richTextBox1.AppendText(Convert.ToString(cp.MessagesQueue.Dequeue()));
  
             }
 
@@ -146,7 +160,7 @@ namespace ComPortClient
 
         private void button3_Click(object sender, EventArgs e)
         {
-  
+
                 richTextBox1.AppendText(String.Format("<{0}>: {1}", cp.Name, "Sending File" + "\n"));
                 cp.SendFileDialog();
             
