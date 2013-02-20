@@ -29,6 +29,7 @@ namespace ComPortClient
         public string[] MultiLineMessageBuffer;
         public int countOfRecivedLines;
 
+        private byte[] OutputMessageBuffer;
 
         public ComPort (string ComPortNumber)
         {
@@ -79,7 +80,7 @@ namespace ComPortClient
                     }
                     else
                     {
-                        string[] message = ParseMessage(sp.ReadLine());
+                        string message = ParseByteMessage(sp.ReadLine());
 
                        if (message != null)
                        {
@@ -95,6 +96,55 @@ namespace ComPortClient
             }
         }
 
+
+        public void SendByteMessageRequest(int toId, string message)
+        {
+            OutputMessageBuffer = System.Text.Encoding.UTF8.GetBytes(message);
+
+            int MessageHash = ("ByteMessageRequest" + toId + ClientId + OutputMessageBuffer.Length +
+                                   OutputMessageBuffer.GetHashCode()).GetHashCode();
+
+            sp.WriteLine("ByteMessageRequest" + '|' + toId + '|' + ClientId + '|' + OutputMessageBuffer.Length + '|' + OutputMessageBuffer.GetHashCode() + '|' + MessageHash );
+        }
+
+        //public void SendByteMessageAnswer
+
+
+        public  string ParseByteMessage(string notParsedMessage)
+        {
+
+            string[] message = notParsedMessage.Split('|');
+
+            switch (message[0])
+            {
+                case "ByteMessageRequest":
+                    {
+
+                        try
+                        {
+                            if (((message[0]+message[1]+message[2]+message[3]+message[4]).GetHashCode()
+                                ==Convert.ToInt32(message[5])) && Convert.ToInt32(message[2]) == ClientId)
+                            {
+                                //  SendMessage("SystemMessage", Convert.ToInt32(message[2]), "Message delivered");
+                                return "Byte Message Request";
+                            }
+                        }
+                        catch (Exception)
+                        {
+                          
+                            throw;
+                        }
+
+
+                          
+                            
+
+                    }
+                    break;
+            }
+
+            return null;
+        }
 
 
         public string[] ParseMessage(string s)
